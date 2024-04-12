@@ -1,9 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation , useNavigate } from "react-router-dom";
 import Login from "./Login";
 import { useForm } from "react-hook-form";
-
+import axios from 'axios';
+import toast from 'react-hot-toast';
 function Signup() {
+  const location= useLocation();
+  const navigate = useNavigate()
+  const from = location.state?.from?.pathname || "/";
   const {
     register,
     handleSubmit,
@@ -11,11 +15,33 @@ function Signup() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    const userInfo = {
+      fullname:data.fullname,
+      email:data.email,
+      password:data.password,
+    }
+    await axios.post("http://localhost:5000/user/signup" , userInfo)
+    .then((res) =>{
+      console.log(res.data)
+      if(res.data){
+        toast.success('sign up successfull');
+       navigate(from, {replace: true})
+      }
+      localStorage.setItem("Users" , JSON.stringify(res.data.user));
+    }).catch((err) => {
+      if(err.response){
+        console.log(err);
+      //  alert("error" + err.response.data.message);
+        toast.error("error" + err.response.data.message);
+      }
+    });
+  //  console.log(data)
+  }
   return (
     <div className="flex h-screen items-center justify-center">
       <div className=" p-5 rounded-md w-[600px] ">
-        <div className="modal-box ">
+        <div className="modal-box dark:bg-slate-900 dark:text-white">
           <form method="dialog" onSubmit={handleSubmit(onSubmit)}>
             {/* if there is a button in form, it will close the modal */}
             <Link
@@ -30,12 +56,12 @@ function Signup() {
             <span>Name :</span>
             <br />
             <input
-            {...register("text", { required: true })}
+            {...register("fullname", { required: true })}
               type="text"
               placeholder="Enter your full name"
-              className="w-full px-4 border rounded-md  outline-none h-8"
+              className="w-full px-4 border rounded-md dark:bg-slate-900 dark:text-white outline-none h-8"
             ></input><br/>
-            {errors.text && <span className=" text-red-500 text-sm">This field is required</span>}
+            {errors.fullname && <span className=" text-red-500 text-sm">This field is required</span>}
             <br />
             <span>Email :</span>
             <br />
@@ -43,7 +69,7 @@ function Signup() {
             {...register("email", { required: true })}
               type="email"
               placeholder="Enter your email"
-              className="w-full px-4 border rounded-md  outline-none h-8"
+              className="w-full dark:text-black px-4 border rounded-md  outline-none h-8"
             ></input><br/>
             {errors.email && <span className=" text-red-500 text-sm">This field is required</span>}
             <br />
@@ -53,7 +79,7 @@ function Signup() {
             {...register("password", { required: true })}
               type="password"
               placeholder="Enter your password "
-              className="w-full px-3 border rounded-md h-8  outline-none "
+              className="w-full  dark:text-black px-3 border rounded-md h-8  outline-none "
             ></input><br/>
             {errors.password && <span className=" text-red-500 text-sm">This field is required</span>}
           </div>
